@@ -1,2 +1,2 @@
 news-md-prj
-Chronicle project
+Проект создания интерфейса для хроники.
