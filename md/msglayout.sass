@@ -1,0 +1,103 @@
+*
+    margin: 0
+    padding: 0
+
+body
+    font-family: 'Helvetica Neue', 'Calibri', 'Arial', sans-serif
+    font-size: 13pt
+    color: black
+    background: white
+    padding: 10px 30px 30px
+    max-width: 750px
+
+.header
+    text-align: center
+
+.date
+    font-size: 18pt
+    font-weight: bold
+    margin: 0
+
+.dayofweek
+    font-family: 'Calibri', 'Arial', sans-serif
+    font-size: 18pt
+    font-style: italic
+
+.footer
+    border-top: 1px solid silver
+    padding-top: 15px
+    margin-top: 10px
+    &-links
+        list-style-type: none
+        display: flex
+        justify-content: flex-start
+        padding-bottom: 5px
+        & li:not(:first-of-type)::before
+            content: ':'
+            font-weight: bold
+            color: blue
+            padding-left: 5px
+    &-link
+        text-decoration: none
+        font-weight: normal
+        color: maroon
+        &:hover
+            color: red
+    &-credits
+        text-align: left
+        font-size: 11pt
+        line-height: 150%
+        padding-top: 5px
+        &-link
+            text-decoration: none
+            color: dimgray
+
+.message
+    text-align: justify
+    padding: 10px 0
+    line-height: 150%
+    & .message-header
+        font-size: 13pt
+        text-align: left
+        padding: 0
+    & .message-tags
+        color: dimgray
+        text-align: left
+        padding: 0
+        &::before
+            content: "Темы: "
+            font-weight: bold
+    & p
+        margin: 1px 0
+        text-indent: 1cm
+        &:first-of-type
+            text-indent: 0
+    & a
+        color: blue
+        text-decoration: none
+        font-weight: 500
+        &:hover
+            color: red
+
+.section-header
+    font-size: 16pt
+    text-align: center
+    padding-top: 15px
+
+.notes p
+    font-family: 'Helvetica Neue', 'Calibri', 'Arial', sans-serif
+    font-size: 13pt
+    font-weight: normal
+    line-height: 150%
+    padding: 10px 0
+    text-align: justify
+    & a
+        color: blue
+        text-decoration: none
+        font-weight: 500
+        &:hover
+            color: red
+
+sup
+    font-size: 8pt
+    line-height: 100%
