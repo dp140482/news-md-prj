@@ -39,7 +39,7 @@ class LegalNotes {
             return `<p class="footer-notes"><sup>${ numcode }</sup> ${ this.notes[numcode - 1] }</p>`;
     }
     addFooterNote(code) {
-        footer.insertAdjacentHTML('beforeend', this.footerNote(code));
+        document.getElementsByTagName('footer')[0].insertAdjacentHTML('beforeend', this.footerNote(code));
     }
     replaceCodes(stringToReplace) {
         let result = stringToReplace;
