@@ -99,7 +99,14 @@ class ArticleBlock {
         let article = [];
         let afterHeadline = false;
         for (let i = 0; i < strings.length; i++) {
-            if (strings[i].startsWith('##')) {
+            if (strings[i].startsWith('#!')) {
+                let str = strings[i].replace('#!', '<div class="short">');
+                str += '</div>';
+                articles.push(articleString(article));
+                article = [];
+                article.push(str);
+                afterHeadline = false;
+            } else if (strings[i].startsWith('##')) {
                 let str = strings[i].replace('##', '<div class="message-tags">');
                 str += '</div>';
                 if (!afterHeadline && article.length !== 0) {
