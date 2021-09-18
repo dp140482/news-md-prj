@@ -1,7 +1,3 @@
-const title = document.getElementsByTagName('title')[0];
-const header = document.getElementsByTagName('header')[0];
-const footer = document.getElementsByTagName('footer')[0];
-
 class LegalNotes {
     constructor() {
         this.notes = [
@@ -36,22 +32,44 @@ class LegalNotes {
     footerNote(code) {
         let numcode = this.numeric(code);
         if (numcode)
-            return `<p class="footer-notes"><sup>${ numcode }</sup> ${ this.notes[numcode - 1] }</p>`;
+            return `<p class="footer-note"><sup>${ numcode }</sup> ${ this.notes[numcode - 1] }</p>`;
     }
-    addFooterNote(code) {
-        document.getElementsByTagName('footer')[0].insertAdjacentHTML('beforeend', this.footerNote(code));
+}
+
+class LegalCodesReplacer {
+    constructor() {
+        this.footnotes = [];
+        this.result = '';
+        this.legalNotes = new LegalNotes();
     }
-    replaceCodes(stringToReplace) {
-        let result = stringToReplace;
-        for (let code of this.codes) {
+    replace(stringToReplace) {
+        this.result = stringToReplace;
+        for (let code of this.legalNotes.codes) {
             let regExp = new RegExp(`\{${ code }\}`, 'g');
-            if (result.search(regExp) > 0) {
-                this.addFooterNote(code);
-                result = result.replace(regExp, this.intextNote(code));
+            if (this.result.search(regExp) > 0) {
+                this.footnotes.push(this.legalNotes.footerNote(code));
+                this.result = this.result.replace(regExp, this.legalNotes.intextNote(code));
             }
         }
-        return result;
     }
+    clear() {
+        this.footnotes = [];
+        this.result = '';
+    }
+    addNotesTo(footerElement) {
+        footerElement.insertAdjacentHTML('beforeend', '<section class="footer-notes">');
+        for (let note of this.footnotes)
+            footerElement.insertAdjacentHTML('beforeend', note);
+        footerElement.insertAdjacentHTML('beforeend', '</section>');
+    }
+}
+
+function extractDataFrom(TextOfBlock) {
+    let data = TextOfBlock;
+    data = data.replace(/\.\.\./g, '…');
+    data = data.replace(/"([^"]+)"/g, '«$1»');
+    data = data.replace(/(?<!»,) - /g, ' — ');
+    return data;
 }
 
 Date.prototype.toRusString = function() {
@@ -59,93 +77,110 @@ Date.prototype.toRusString = function() {
     return firstPart + ' ' + this.getFullYear() + ' года';
 }
 
-function simpleFooter(text) {
-    return `<footer class="footer">
-    <p class="footer-links">
-        <a href="daybyday.html" class="footer-link">День за днём</a>
-    </p>
-    <p class="footer-credits">${ text }</p>
-    </footer>`;
-}
-
-function simpleHeader(jsonDate) {
-    let date = new Date(jsonDate);
-    return `<header class="header">
-    <h1 class="date">${ date.toRusString() }</h1>
-    <div class="dayofweek">${ new Intl.DateTimeFormat('ru-RU', { weekday: 'long'}).format(date) }</div>
-</header>`
-}
-
-class ArticleBlock {
+class DocElements {
     constructor() {
+        this.title = document.getElementsByTagName('title')[0];
         this.block = document.getElementById('md');
+        this.LCR = new LegalCodesReplacer();
     }
-    extractData() {
-        let data = this.block.innerHTML;
-        data = data.replace(/\.\.\./g, '…');
-        data = data.replace(/"([^"]+)"/g, '«$1»');
-        data = data.replace(/(?<!»,) - /g, ' — ');
-        return data;
+    prepareStructure() {
+        this.header = document.getElementsByTagName('header')[0];
+        this.footer = document.getElementsByTagName('footer')[0];
+        let date = new Date(this.header.innerHTML);
+        this.title.innerText = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'short' }).format(new Date(date));
+        this.header.outerHTML = `
+        <header class="header">
+            <h1 class="date">${ date.toRusString() }</h1>
+            <div class="dayofweek">${ new Intl.DateTimeFormat('ru-RU', { weekday: 'long'}).format(date) }</div>
+        </header>`;
+        this.footer.outerHTML = `<footer class="footer">
+        <p class="footer-links">
+            <a href="daybyday.html" class="footer-link">День за днём</a>
+        </p>
+        <p class="footer-credits">${ this.footer.innerHTML }</p>
+        </footer>`;
     }
-    prepareArticles(data) {
-        function articleString(articleArray) {
-            return `<article class="message">${articleArray.join('')}</article>`;
-        }
-
-        let strings = data.split(/\n/g).filter(function(value) {
+    prepareData() {
+        this.data = extractDataFrom(this.block.innerHTML);
+        this.LCR.replace(this.data);
+        this.block.style.display = 'none';
+        this.block.innerText = '';
+        this.data = this.LCR.result;
+    }
+    dropFootnotes() {
+        this.LCR.addNotesTo(this.footer);
+        this.LCR.clear();
+        this.LCR = null;
+    }
+    prepareStrings() {
+        this.strings = this.data.split(/\n/g).filter(function(value) {
             return value != '';
         });
-        let articles = [];
-        let article = [];
+        this.data = undefined;
+    }
+    pushArticle() {
+        if (this.article.length > 0) {
+            this.articles.push(`<article class="message">${this.article.join('')}</article>`);
+            this.article = [];
+        }
+    }
+    parseStrings() {
+        this.articles = [];
+        this.article = [];
         let afterHeadline = false;
-        for (let i = 0; i < strings.length; i++) {
-            if (strings[i].startsWith('#!')) {
-                let str = strings[i].replace('#!', '<div class="short">');
-                str += '</div>';
-                articles.push(articleString(article));
-                article = [];
-                article.push(str);
-                afterHeadline = false;
-            } else if (strings[i].startsWith('##')) {
-                let str = strings[i].replace('##', '<div class="message-tags">');
-                str += '</div>';
-                if (!afterHeadline && article.length !== 0) {
-                    articles.push(articleString(article));
-                    article = [];
+        let string;
+        while (string = this.strings.shift()) {
+            if (string.startsWith('#\{begin\}')) {
+                this.article.push(string.replace('#\{begin\}', '<div class="messages-closed"><button class="btn-open-close">▲▼</button>'));
+            } else if (string.startsWith('#\{end\}')) {
+                this.article.push(string.replace('#\{end\}', '</div>'));
+                this.pushArticle();
+            } else if (string.startsWith('#!')) {
+                this.article.push('<div class="short">');
+                this.article.push(string.replace('#!', ''));
+                this.article.push('</div>');
+                this.pushArticle();
+            } else if (string.startsWith('##')) {
+                let s = string.replace('##', '<div class="message-tags">') + '</div>';
+                if (!afterHeadline && this.article.length !== 0) {
+                    this.pushArticle();
                 }
-                article.push(str);
+                this.article.push(s);
                 afterHeadline = false;
-            } else if (strings[i].startsWith('#')) {
-                let str = strings[i].replace('#', '<h2 class="message-header">');
-                str += '</h2>';
-                if (article.length !== 0) {
-                    articles.push(articleString(article));
-                    article = [];
+            } else if (string.startsWith('#')) {
+                let s = string.replace('#', '<h2 class="message-header">') + '</h2>';
+                if (this.article.length !== 0) {
+                    this.pushArticle();
                 }
-                article.push(str);
+                this.article.push(s);
                 afterHeadline = true;
             } else {
-                article.push(`<p>${strings[i]}</p>`);
-                afterHeadline = false;
+                this.article.push(`<p>${ string }</p>`);
             }
         }
-        articles.push(articleString(article));
-        return articles;
+        this.pushArticle();
     }
-    convert() {
-        if (!this.block) return;
+    show() {
         let output = document.createElement('section');
-        let articles = this.prepareArticles(
-            new LegalNotes().replaceCodes(this.extractData())
-        );
-        output.innerHTML = articles.join('');
+        output.innerHTML = this.articles.join('');
         this.block.insertAdjacentElement('beforebegin', output);
         this.block.style.display = 'none';
     }
+    do() {
+        if (!this.block) return;
+        this.prepareStructure();
+        this.prepareData();
+        this.dropFootnotes();
+        this.prepareStrings();
+        this.parseStrings();
+        this.show();
+    }
 }
 
-let date = header.innerHTML;
-title.innerText = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'short' }).format(new Date(date));
-header.outerHTML = simpleHeader(date);
-footer.outerHTML = simpleFooter(footer.innerHTML);
-new ArticleBlock().convert();
+new DocElements().do();
+document.querySelectorAll('.btn-open-close').forEach(element => {
+    element.addEventListener('click', event => {
+        element.parentNode.classList.toggle('messages-closed');
+        element.parentNode.classList.toggle('messages-open');
+    });
+});
