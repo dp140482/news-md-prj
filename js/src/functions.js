@@ -7,7 +7,7 @@ export function extractDataFrom(TextOfBlock) {
     data = data.replace(/\.\.\./g, '…');
     data = data.replace(/(^)\x22(\s)/g, '$1»$2');
     data = data.replace(/(^|\s|\()"/g, "$1«");
-    data = data.replace(/"(\;|\!|\?|\:|\.|\,|$|\)|\s)/g, "»$1");
+    data = data.replace(/"(\;|\!|\?|\:|\.|\,|$|\)|\{|\s)/g, "»$1");
     data = data.replace(/(?<!»,) - /g, ' — ');
     return data;
 }
