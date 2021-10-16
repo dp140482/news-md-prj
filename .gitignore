@@ -2,3 +2,4 @@
 *.map
 .vscode
 tests
+node_modules
