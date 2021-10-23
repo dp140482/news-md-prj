@@ -32,33 +32,20 @@ class DocElements {
     parseStrings() {
         this.articles = [];
         this.article = [];
-        let afterHeadline = false;
         let string;
         while (string = this.strings.shift()) {
-            if (string.startsWith('#\{begin\}')) {
-                this.article.push(string.replace('#\{begin\}', '<div class="messages-closed"><button class="btn-open-close">▲▼</button>'));
-            } else if (string.startsWith('#\{end\}')) {
-                this.article.push(string.replace('#\{end\}', '</div>'));
-                this.pushArticle();
-            } else if (string.startsWith('#!')) {
-                this.article.push('<div class="short">');
-                this.article.push(string.replace('#!', ''));
-                this.article.push('</div>');
-                this.pushArticle();
+            if (string.startsWith('###')) {
+                this.article.push(string.replace('###', '<h3 class="message-header">') + '</h3>');
             } else if (string.startsWith('##')) {
                 let s = string.replace('##', '<div class="message-tags">') + '</div>';
-                if (!afterHeadline && this.article.length !== 0) {
-                    this.pushArticle();
-                }
-                this.article.push(s);
-                afterHeadline = false;
-            } else if (string.startsWith('#')) {
-                let s = string.replace('#', '<h2 class="message-header">') + '</h2>';
                 if (this.article.length !== 0) {
                     this.pushArticle();
                 }
                 this.article.push(s);
-                afterHeadline = true;
+            } else if (string.startsWith('#')) {
+                let s = string.replace('#', '<h2 class="block-header">') + '</h2>';
+                this.pushArticle();
+                this.articles.push(s);
             } else {
                 this.article.push(`<p>${ string }</p>`);
             }

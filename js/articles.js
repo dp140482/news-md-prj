@@ -1,4 +1,3 @@
-import { execute as runDocElements, setListeners } from './src/docElements.js'
+import { execute as runDocElements } from './src/docElements.js'
 
 runDocElements();
-setListeners();
