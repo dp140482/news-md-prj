@@ -1,2 +1,6 @@
 .DS_Store
 *.map
+.vscode
+tests
+node_modules
+js/node_modules
